@@ -2,7 +2,7 @@
 (async () => {
   try {
     // build base URL without credentials
-    const base = 'http://web1-79e4a3bc.p1.securinets.tn'
+    const base = ''
 
     // fetch CSRF token using admin's cookies
     const tokRes = await fetch(base + '/csrf-token', { credentials: 'include' });
